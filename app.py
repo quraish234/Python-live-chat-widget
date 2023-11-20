@@ -1,13 +1,18 @@
-import os
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, send, emit, join_room, leave_room
-
+from flask_cors import CORS  # Import the CORS module
+import os
 SECRET_KEY = os.urandom(32)
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
+
 app.config['SECRET_KEY'] = SECRET_KEY
 
-socketio = SocketIO(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
+
+# ... (rest of your code)
+
 
 users = {}
 chats = {}
