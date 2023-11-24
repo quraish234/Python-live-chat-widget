@@ -1,18 +1,25 @@
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, send, emit, join_room, leave_room
-from flask_cors import CORS  # Import the CORS module
+from flask_cors import CORS
 import os
+import mysql.connector  # Import the MySQL connector module
+
 SECRET_KEY = os.urandom(32)
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
-
+CORS(app)
 app.config['SECRET_KEY'] = SECRET_KEY
 
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-# ... (rest of your code)
-
+# Establish a connection to the MySQL database
+db = mysql.connector.connect(
+    host="192.168.19.160",
+    user="usher",
+    password="Um@ir65048420",
+    database="rasa"
+)
+cursor = db.cursor()
 
 users = {}
 chats = {}
@@ -25,16 +32,7 @@ def index():
 def admin():
     return render_template('admin.html', users=users, chats=chats)
 
-# TRŪKSTA:
-# TO DO: Live typing indication - 50 % (left to make indication for users typo too)
-# TO DO: Sent/Delivered/Seen statuses
-# TO DO: Per session chat history (save as output?)
-# TO DO: Load chat history for user too (after refresh keep in same old room?)
-# TO DO: Alert new user, new messages for admin (+autoadd new user to chat menu)
-# TO DO: Break words if they are tooooooo long to fit chatbox window
-# TO DO: Doesn't work input required
-# TO DO: If user message room != current admin room change chat menu button color
-# TO DO: Add log out/disconnected
+
 
 # Get username
 @socketio.on('username', namespace='/message')
@@ -53,7 +51,12 @@ def user_message(data):
     room = data['room']
     msg = username + ': ' + message
     chats[room] = chats[room] + msg + '<br>'
-    emit('print_message', msg, room=room)    # broadcast=True
+    emit('print_message', msg, room=room)
+
+    # Insert the message into the database
+    cursor.execute("INSERT INTO live_chat_messages (room, sender, message) VALUES (%s, %s, %s)",
+                   (room, username, message))
+    db.commit()
 
 # Send admin messages
 @socketio.on('admin_message', namespace='/message')
@@ -63,6 +66,11 @@ def admin_message(data):
     msg = 'Agent: ' + message
     chats[room] = chats[room] + msg + '<br>'
     emit('print_message', msg, room=room)
+
+    # Insert the message into the database
+    cursor.execute("INSERT INTO live_chat_messages (room, sender, message) VALUES (%s, %s, %s)",
+                   (room, 'Agent', message))
+    db.commit()
 
 # Open one of chat in admin dashboard
 @socketio.on('chat_menu', namespace='/message')
@@ -83,6 +91,19 @@ def chat_error_handler(e):
     print('An error has occurred: ' + str(e))
 
 
+if __name__ == '__main__':
+    socketio.run(app, host='0.0.0.0', port=5009, debug=True)
+
+# TRŪKSTA:
+# TO DO: Live typing indication - 50 % (left to make indication for users typo too)
+# TO DO: Sent/Delivered/Seen statuses
+# TO DO: Per session chat history (save as output?)
+# TO DO: Load chat history for user too (after refresh keep in same old room?)
+# TO DO: Alert new user, new messages for admin (+autoadd new user to chat menu)
+# TO DO: Break words if they are tooooooo long to fit chatbox window
+# TO DO: Doesn't work input required
+# TO DO: If user message room != current admin room change chat menu button color
+# TO DO: Add log out/disconnected
 
 # @socketio.on('leave')
 # def on_leave(data):
@@ -98,7 +119,3 @@ def chat_error_handler(e):
 # @socketio.on('disconnect')
 # def test_disconnect():
 #     print('Client disconnected')
-
-
-if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=5000, debug=True)

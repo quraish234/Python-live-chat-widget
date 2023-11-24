@@ -1,7 +1,7 @@
 $(document).ready(function() {
 
 // Global variables
-  var message_socket = io('http://127.0.0.1:5000/message');
+  var message_socket = io('http://127.0.0.1:5009/message');
 
 // Open and close user chatbox window
   $('#open-button').on('click', function() {
@@ -19,7 +19,7 @@ $(document).ready(function() {
     const $el = $(this)
     const username = $el.data('user')
     const room = $el.data('room')
-    document.getElementById('room_name').innerText = 'CHAT WHIT: ' + username;
+    document.getElementById('room_name').innerText = 'CHAT WITH: ' + username;
     document.getElementById('admin_chatbox').innerText = 'Loading..';
     document.getElementById('room').innerText = room;
     message_socket.emit('chat_menu', {'username' : username, 'room' : room });
