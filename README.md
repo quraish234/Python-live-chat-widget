@@ -23,4 +23,4 @@ flask run
 ```
 Setting the `FLASK_APP` variable to `main.py` directs flask to use `main.py` file to run the application.
 
-Navigate to Home page `http://localhost:5000` and `http://localhost:5000/admin` and start to chat. Have fun!
+Navigate to Home page `http://localhost:5009` and `http://localhost:5009/admin` and start to chat. Have fun!
